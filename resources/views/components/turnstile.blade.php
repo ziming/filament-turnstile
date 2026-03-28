@@ -12,7 +12,7 @@
     <div wire:ignore
          x-load-js="['https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad']"
          x-data="{
-            state: $wire.entangle('{{ $statePath }}').defer,
+            state: $wire.entangle('{{ $statePath }}'),
             widgetId: null,
         }"
          x-init="(() => {

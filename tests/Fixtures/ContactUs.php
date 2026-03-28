@@ -5,8 +5,8 @@ namespace Coderflex\FilamentTurnstile\Tests\Fixtures;
 use Coderflex\FilamentTurnstile\Forms\Components\Turnstile;
 use Coderflex\FilamentTurnstile\Tests\Models\Contact;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Forms\FormsComponent;
+use Filament\Schemas\Schema;
 use Illuminate\Validation\ValidationException;
 
 class ContactUs extends FormsComponent
@@ -18,32 +18,30 @@ class ContactUs extends FormsComponent
         $this->form->fill();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $form): Schema
     {
-        return $form;
+        return $form->schema([
+            Forms\Components\TextInput::make('name')
+                ->label('Name')
+                ->required(),
+            Forms\Components\TextInput::make('email')
+                ->label('Email')
+                ->required(),
+            Forms\Components\TextInput::make('content')
+                ->label('Content')
+                ->required(),
+            Turnstile::make('cf-captcha')
+                ->theme('auto'),
+        ])
+            ->statePath('data')
+            ->model(Contact::class);
     }
 
+    // Filament 3 compatibility: getForms() is used by InteractsWithForms
     protected function getForms(): array
     {
         return [
-            'form' => $this->form(
-                $this->makeForm()
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Name')
-                            ->required(),
-                        Forms\Components\TextInput::make('email')
-                            ->label('Email')
-                            ->required(),
-                        Forms\Components\TextInput::make('content')
-                            ->label('Content')
-                            ->required(),
-                        Turnstile::make('cf-captcha')
-                            ->theme('auto'),
-                    ])
-            )
-                ->statePath('data')
-                ->model(Contact::class),
+            'form' => $this->form($this->makeForm()),
         ];
     }
 
