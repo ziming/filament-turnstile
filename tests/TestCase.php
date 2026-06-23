@@ -17,7 +17,6 @@ use Filament\Widgets\WidgetsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
-use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -38,9 +37,8 @@ class TestCase extends Orchestra
 
     protected function getPackageProviders($app)
     {
-        return [
+        $providers = [
             ActionsServiceProvider::class,
-            BladeCaptureDirectiveServiceProvider::class,
             BladeHeroiconsServiceProvider::class,
             BladeIconsServiceProvider::class,
             FilamentServiceProvider::class,
@@ -54,6 +52,18 @@ class TestCase extends Orchestra
             FilamentTurnstileServiceProvider::class,
             TurnstilePanelProvider::class,
         ];
+
+        // Filament 3 uses ryangjchandler/blade-capture-directive
+        if (class_exists(\RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider::class)) {
+            $providers[] = \RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider::class;
+        }
+
+        // Filament 4+ includes the schemas package
+        if (class_exists(\Filament\Schemas\SchemasServiceProvider::class)) {
+            $providers[] = \Filament\Schemas\SchemasServiceProvider::class;
+        }
+
+        return $providers;
     }
 
     public function getEnvironmentSetUp($app)
@@ -73,6 +83,13 @@ class TestCase extends Orchestra
         collect($migrations)->each(
             fn ($migration) => $migration->up()
         );
+
+        // In Filament 3, Filament\Schemas\Schema does not exist.
+        // Alias it to Filament\Forms\Form so test fixtures can use Schema type hints
+        // and remain compatible with both Filament 3 and Filament 4+.
+        if (! class_exists(\Filament\Schemas\Schema::class)) {
+            class_alias(\Filament\Forms\Form::class, \Filament\Schemas\Schema::class);
+        }
     }
 
     protected function setCurrentFilamentPanel(): void
